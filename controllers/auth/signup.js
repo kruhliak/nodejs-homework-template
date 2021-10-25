@@ -1,7 +1,9 @@
 const { Conflict } = require("http-errors");
 const gravatar = require("gravatar");
+const { nanoid } = require("nanoid");
 
 const { User } = require("../../models");
+const { sendEmail } = require("../../helpers");
 
 const signup = async (req, res) => {
   const { email, password } = req.body;
@@ -19,12 +21,23 @@ const signup = async (req, res) => {
     true
   );
 
-  const newUser = new User({ email });
+  const verifyToken = nanoid();
+
+  const newUser = new User({ email, verifyToken, avatar });
 
   newUser.setPassword(password);
   newUser.setAvatar(avatar);
 
   await newUser.save();
+
+  const data = {
+    to: email,
+    subject: "Confirm new user sign-up's",
+    html: `
+        <a href="http://localhost:3000/api/users/verify/${verifyToken}" target="_blank">Confirm your email</a>`,
+  };
+
+  await sendEmail(data);
 
   res.status(201).json({
     status: "success",

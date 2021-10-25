@@ -4,9 +4,13 @@ const { User } = require("../../models");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }, "_id email password");
+  const user = await User.findOne({ email }, "_id email password verify");
   if (!user || !user.comparePassword(password)) {
     throw new BadRequest("Email or password is wrong");
+  }
+
+  if (!user.verify) {
+    throw new BadRequest("Email not verify");
   }
 
   const { _id } = user;
